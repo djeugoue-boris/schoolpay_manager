@@ -1,0 +1,125 @@
+            <?php
+require_once '../../config/db.php';
+require('../../assets/lib/fpdf/fpdf.php'); // FPDF classique
+
+if (!isset($_GET['id'])) {
+    die('ID manquant');
+}
+
+$id = intval($_GET['id']);
+$sql = "
+SELECT insc.*, cl.nom_classe, sec.nom_section, an.libelle AS annee_scolaire
+FROM inscriptions insc
+JOIN classes cl ON insc.id_classe = cl.id
+JOIN sections sec ON cl.id_section = sec.id
+JOIN annees_scolaires an ON insc.id_annee = an.id
+WHERE insc.id = ?
+";
+$stmt = $pdo->prepare($sql);
+$stmt->execute([$id]);
+$data = $stmt->fetch(PDO::FETCH_ASSOC);
+
+if (!$data) {
+    die('Inscription introuvable.');
+}
+
+class PDF_Recu extends FPDF {
+    function Header() {
+        // Bandeau haut avec fond violet foncé
+        $this->SetFillColor(111, 66, 193); 
+        $this->Rect(0, 0, 210, 30, 'F');
+        $this->Image('../../assets/img/logo.jpg', 10, 5, 20); // logo visible en haut
+        $this->SetFont('Arial', 'B', 14);
+        $this->SetTextColor(255, 255, 255);
+        $this->Cell(0, 10, utf8_decode("COLLÈGE POLYVALENT BILINGUE MARIE THÉRÈSE"), 0, 1, 'C');
+        $this->Ln(10);
+    }
+
+    function Footer() {
+        $this->SetY(-15);
+        $this->SetFont('Arial', 'I', 9);
+        $this->Cell(0, 10, utf8_decode('Page ') . $this->PageNo(), 0, 0, 'C');
+        
+        // Ajouter les informations de version et branding
+        $this->SetY(-10);
+        $this->SetFont('Arial', 'I', 8);
+        $this->Cell(95, 5, utf8_decode('schoolpay v2.0'), 0, 0, 'L');
+        $this->Cell(95, 5, utf8_decode('@schoolpay'), 0, 0, 'R');
+    }
+
+    // Filigrane uniquement (placé après le contenu pour ne pas gêner)
+    function AddFiligrane() {
+        $this->SetFont('Arial', 'B', 50);
+        $this->SetTextColor(230, 230, 230);
+        $this->RotateText(30, 150, 'Reçu Original', 45);
+        $this->SetTextColor(0, 0, 0); // reset couleur
+    }
+
+    function RotateText($x, $y, $txt, $angle) {
+        $this->Rotate($angle, $x, $y);
+        $this->Text($x, $y, utf8_decode($txt));
+        $this->Rotate(0);
+    }
+
+    function Rotate($angle, $x = -1, $y = -1) {
+        if ($x == -1) $x = $this->x;
+        if ($y == -1) $y = $this->y;
+        $rad = deg2rad($angle);
+        $c = cos($rad);
+        $s = sin($rad);
+        $cx = $x * $this->k;
+        $cy = ($this->h - $y) * $this->k;
+        $this->_out(sprintf('q %.3F %.3F %.3F %.3F %.3F %.3F cm', $c, $s, -$s, $c, $cx, $cy));
+    }
+
+    function _endpage() {
+        $this->_out('Q');
+        parent::_endpage();
+    }
+}
+
+// Création PDF
+$pdf = new PDF_Recu();
+$pdf->AddPage();
+$pdf->SetFont('Arial', 'B', 16);
+$pdf->SetTextColor(0, 0, 0);
+$pdf->Cell(0, 12, utf8_decode('Reçu d\'Inscription'), 0, 1, 'C');
+$pdf->Ln(5);
+
+// Encadré des infos
+$pdf->SetFont('Arial', '', 12);
+$pdf->SetFillColor(245, 245, 255); 
+$pdf->SetDrawColor(150, 150, 150);
+$pdf->SetLineWidth(0.3);
+
+// Infos détaillées
+$pdf->Cell(60, 10, utf8_decode('Nom :'), 1, 0, 'L', true);
+$pdf->Cell(130, 10, utf8_decode($data['nom'] . ' ' . $data['prenom']), 1, 1);
+
+$pdf->Cell(60, 10, 'Matricule :', 1, 0, 'L', true);
+$pdf->Cell(130, 10, utf8_decode($data['matricule']), 1, 1);
+
+$pdf->Cell(60, 10, 'Classe :', 1, 0, 'L', true);
+$pdf->Cell(130, 10, utf8_decode($data['nom_classe']), 1, 1);
+
+$pdf->Cell(60, 10, 'Section :', 1, 0, 'L', true);
+$pdf->Cell(130, 10, utf8_decode($data['nom_section']), 1, 1);
+
+$pdf->Cell(60, 10, utf8_decode('Année scolaire :'), 1, 0, 'L', true);
+$pdf->Cell(130, 10, utf8_decode($data['annee_scolaire']), 1, 1);
+
+$pdf->Cell(60, 10, utf8_decode('Frais d\'inscription :'), 1, 0, 'L', true);
+$pdf->Cell(130, 10, number_format($data['frais_inscription'], 2) . ' FCFA', 1, 1);
+
+$pdf->Cell(60, 10, utf8_decode('Date d\'inscription :'), 1, 0, 'L', true);
+$pdf->Cell(130, 10, date('d/m/Y', strtotime($data['date_inscription'])), 1, 1);
+
+$pdf->Ln(25);
+$pdf->SetFont('Arial', 'I', 12);
+$pdf->Cell(0, 10, utf8_decode('Signature de l\'administration'), 0, 1, 'R');
+
+// Ajout du filigrane à la fin
+$pdf->AddFiligrane();
+
+$pdf->Output('I', 'Recu_Inscription_' . $data['matricule'] . '.pdf');
+?>

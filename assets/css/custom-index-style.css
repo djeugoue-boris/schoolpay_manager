@@ -1,0 +1,84 @@
+/* ========== NAVBAR BLUR ========== */
+.glass-navbar {
+    background-color: #002e5d !important;
+    backdrop-filter: blur(6px);
+  }
+  
+  /* ========== HERO SECTION ========== */
+  .hero {
+    background-image: url('../img/salle1.jpg');
+    background-size: cover;
+    background-position: center;
+    height: 100vh;
+    position: relative;
+  }
+  
+  .overlay {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    z-index: 1;
+  }
+  
+  .hero-content {
+    position: relative;
+    z-index: 2;
+  }
+  
+  .typewriter-text {
+    font-size: 1.4rem;
+    border-right: 3px solid #fff;
+    overflow: hidden;
+    white-space: nowrap;
+    animation: blink .75s step-end infinite;
+    min-height: 30px;
+  }
+  
+  @keyframes blink {
+    50% { border-color: transparent; }
+  }
+  
+  .glow-button {
+    transition: all 0.3s ease-in-out;
+    box-shadow: 0 4px 20px rgba(255, 193, 7, 0.4);
+  }
+  
+  .glow-button:hover {
+    box-shadow: 0 6px 30px rgba(255, 193, 7, 0.6);
+    transform: scale(1.05);
+  }
+  
+
+  /* NAVBAR effet verre + couleurs bleues */
+.glass-navbar {
+    background: rgba(0, 54, 105, 0.7); /* Bleu foncé semi-transparent */
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  /* Lien navbar */
+  .navbar-nav .nav-link {
+    color: #f0f8ff;
+    font-weight: 500;
+    margin-left: 1rem;
+    transition: color 0.3s ease-in-out;
+  }
+  
+  .navbar-nav .nav-link:hover,
+  .navbar-nav .nav-link.active {
+    color: #00bfff; /* Bleu clair en hover */
+  }
+  
+  /* Bouton créer un compte */
+  .btn-outline-light {
+    border: 2px solid #00bfff;
+    color: #00bfff;
+    transition: all 0.3s ease-in-out;
+  }
+  
+  .btn-outline-light:hover {
+    background-color: #00bfff;
+    color: #fff;
+    transform: translateY(-2px);
+  }
+  
